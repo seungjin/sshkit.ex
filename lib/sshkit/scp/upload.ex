@@ -134,7 +134,7 @@ defmodule SSHKit.SCP.Upload do
     stat = File.stat!(path, time: :posix)
 
     stack = case stat.type do
-      :directory -> [File.ls!(path) | [rest | dirs]]
+      :directory -> [Enum.sort(File.ls!(path)) | [rest | dirs]]
       :regular -> [rest | dirs]
     end
 
@@ -146,6 +146,10 @@ defmodule SSHKit.SCP.Upload do
         :regular -> regular(options, name, stat, cwd, stack, errs)
       end
     end
+  end
+
+  defp skip(options, cwd, [[_ | rest] | dirs], errs) do
+    next(options, cwd, [rest | dirs], errs)
   end
 
   defp time(_, type, name, stat, cwd, stack, errs) do
@@ -192,9 +196,9 @@ defmodule SSHKit.SCP.Upload do
     {:cont, {:error, "SCP channel closed before completing the transfer"}}
   end
 
-  defp warning(_, state = {name, cwd, stack, errs}, buffer) do
+  defp warning(options, state = {_, cwd, stack, errs}, buffer) do
     if String.last(buffer) == "\n" do
-      {:cont, {name, cwd, stack, errs ++ [String.trim(buffer)]}}
+      skip(options, cwd, stack, errs ++ [String.trim(buffer)])
     else
       {:cont, {:warning, state, buffer}}
     end
