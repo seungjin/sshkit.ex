@@ -15,7 +15,7 @@ defmodule SSHKit do
     |> SSHKit.env(%{"NODE_ENV" => "production"})
 
   :ok = SSHKit.upload(context, ".", recursive: true)
-  :ok = SSHKit.run(context, "yarn install", mode: :parallel)
+  :ok = SSHKit.run(context, "yarn install", :parallel)
   ```
   """
 
